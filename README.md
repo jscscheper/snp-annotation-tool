@@ -1,86 +1,103 @@
-# SNP Annotation Tool
+# SNP annotation tool
 
 ![Python](https://img.shields.io/badge/Python-3.7%2B-blue?logo=python)
 ![Biopython](https://img.shields.io/badge/Biopython-1.79-green)
-![License](https://img.shields.io/badge/License-Educational-lightgrey)
+![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-A command-line tool for introducing and analyzing Single Nucleotide Polymorphisms (SNPs) in DNA sequences, with conservation scoring against multiple sequence alignments.
+A tool for introducing and analyzing Single Nucleotide Polymorphisms (SNPs) in DNA sequences. It provides conservation scoring against Multiple Sequence Alignments (MSA) to predict the potential impact of mutations.
 
----
+Available as both a Command line interface (CLI) and a Web application.
 
-## Table of Contents
+## Table of contents
 
 - [Overview](#overview)
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Web application](#web-application)
+  - [Command line](#command-line)
 - [Contact](#contact)
 
 ---
 
 ## Overview
 
-The main goal of this tool is to introduce a single nucleotide polymorphism (SNP) on a given position in a gene sequence specified by the user. The effect of the introduced SNP is measured in conservation against a multiple sequence alignment (MSA) which includes protein sequences that are evolutionarily closely aligned with the given gene sequence.
+The main goal of this tool is to introduce a single nucleotide polymorphism (SNP) at a specific position in a gene sequence. The tool evaluates the effect of the introduced SNP by measuring conservation against a Multiple Sequence Alignment (MSA) of evolutionarily related protein sequences.
 
-The system measures conservation in percentage and gives a final verdict on whether an SNP is:
-- **Deleterious**: <90% conservation
-- **No effect**: ≥90% conservation
+Scoring verdicts:
+- Deleterious: <90% conservation
+- No effect: ≥90% conservation
 
-Example data files are provided for the TP53 gene (`data/sequence.FASTA` and `data/msa.clustal`).
-
----
+Example data files are provided for the TP53 gene in the `data/` directory (`sequence.FASTA` and `msa.clustal`).
 
 ## Features
 
-- Single SNP annotation
-- Batch processing from CSV files
-- Conservation scoring against MSA
-- Supports FASTA and Clustal formats
+- Single SNP annotation: Analyze specific mutations.
+- Batch processing: Process multiple mutations via CSV (CLI only).
+- Conservation scoring: Evaluate impact based on evolutionary conservation.
+- Dual interface: User-friendly web app and scriptable CLI.
+- Format support: Supports FASTA (sequence) and Clustal (MSA) formats.
 
 ---
 
 ## Installation
 
-
-**Step 1: Acquiring Files**
-
-Either [clone][clone] or [download][download] the source files.
-
-**Step 2: Installing Python**
-
-The script is developed in the language Python (version 3.7.9). Please follow instructions to install Python [here][Python].
-
-**Step 3: Installing Necessary Packages**
-
-In addition, a necessary external package needs to be installed; [BioPython][biopython] (version 1.79) is used to read in the FASTA and MSA files. Installation can be done by first setting up a virtual environment, although not required. Thereafter, simply execute the following command on the command-line:
-
+1. Clone the repository
 ```bash
-$ pip install biopython
+git clone https://github.com/jscscheper/snp-annotater.git
+cd snp-annotater
 ```
 
-Now you are set to use this script.
-
-### Usage
-As stated before, the user is free to use their own files. For that reason, I included one statement for direct execution (copy-paste) and a more general description.
-
-#### General description
+2. Set up environment (optional but recommended)
 ```bash
-$ python3 snp.py -n {A, C, G, T} -p <POSITION> -m <MSA.CLUSTAL FILE> -s <GENE_SEQUENCE.FASTA FILE>
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
 ```
 
-Where `-n` represents the nucleotide—A, C, G or T—that forms the SNP, `-p` the position of the replacement, `-m` the MSA in the form of a Clustal file and `-s` the gene sequence as a FASTA file.
-
-#### Direct execution
+3. Install dependencies
 ```bash
-$ python3 snp.py -n A -p 1 -m msa.clustal -s sequence.FASTA
+pip install -r requirements.txt
 ```
 
-### Contact
-If any issue or question remains, please contact us at [d.j.scheper@st.hanze.nl](mailto:d.j.scheper@st.hanze.nl)
+---
 
-[msa]: https://www.ncbi.nlm.nih.gov/homologene/41131
-[gene]: https://www.ncbi.nlm.nih.gov/nuccore/NM_016399.3
-[clone]: https://jscscheper@bitbucket.org/jscscheper/snp_opdracht_bin3.git
-[download]: https://bitbucket.org/jscscheper/snp_opdracht_bin3/src/master/
-[python]: https://www.python.org/
-[biopython]: https://biopython.org/
+## Usage
+
+### Web application
+For an interactive experience, use the Streamlit web app.
+
+```bash
+streamlit run app.py
+```
+This will launch the tool in your default web browser. You can upload your own FASTA and Clustal files or use the provided examples.
+
+### Command line
+Run the tool directly from your terminal.
+
+General syntax:
+```bash
+python -m snp_annotator.cli -n {A, C, G, T} -p <POSITION> -m <MSA_FILE> -s <SEQ_FILE>
+```
+
+Arguments:
+- `-n, --nucleotide`: The new nucleotide (A, C, G, T).
+- `-p, --position`: 1-based position of the SNP.
+- `-m, --msa`: Path to the MSA file (Clustal format).
+- `-s, --dna_sequence`: Path to the DNA sequence file (FASTA format).
+- `--batch`: Path to a CSV file for batch processing (alternative to `-n` / `-p`).
+
+Example:
+```bash
+python -m snp_annotator.cli -n A -p 1 -m data/msa.clustal -s data/sequence.FASTA
+```
+
+---
+
+## Contact
+
+Author: Jamie Scheper  
+Email: [jscscheper@gmail.com](mailto:jscscheper@gmail.com)

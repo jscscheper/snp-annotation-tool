@@ -7,13 +7,10 @@ from snp_annotator.core import SNPAnnotator, InvalidPositionError, SNPAnnotation
 
 def parse_arguments() -> argparse.Namespace:
     """
-    Defines command-line arguments.
+    Command-line arguments.
     """
-    parser = argparse.ArgumentParser(description="""
-    Simple SNP Annotation Tool
-    Introduces a SNP into a gene sequence and evaluates its conservation against an MSA.
-    """)
-    # Mode selection
+    parser = argparse.ArgumentParser(description="SNP Annotation Tool")
+
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-n", "--nucleotide",
                         help="The Single Nucleotide Polymorphism (SNP) to insert (A, C, G, T).",
@@ -42,9 +39,9 @@ def parse_arguments() -> argparse.Namespace:
 
 def main() -> None:
     """
-    Main function of the script.
+    Main.
     """
-    # Configure logging to output to stdout as requested
+
     logging.basicConfig(
         level=logging.INFO,
         format='%(levelname)s: %(message)s',
@@ -80,7 +77,7 @@ def main() -> None:
             if args.method == 'conservation':
                 outcome = annotator.determine_outcome(amino_seq, args.position)
                 verdict = annotator.get_verdict(outcome)
-                print("OUTCOME (Conservation):") # Print outcome clearly as data, not log
+                print("OUTCOME (Conservation):")
                 print(f"The inserted SNP {args.nucleotide} on position {args.position} has {outcome}% similarity.")
                 print(f"Verdict: {verdict.upper()}")
                 

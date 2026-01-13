@@ -6,7 +6,7 @@ from Bio.Align import substitution_matrices
 from Bio.Seq import MutableSeq
 from Bio.SeqRecord import SeqRecord
 
-# Codon table for translation
+
 CODON_TABLE: Dict[str, str] = {
     'ATA': 'I', 'ATC': 'I', 'ATT': 'I', 'ATG': 'M',
     'ACA': 'T', 'ACC': 'T', 'ACG': 'T', 'ACT': 'T',
@@ -27,16 +27,14 @@ CODON_TABLE: Dict[str, str] = {
 }
 
 class SNPAnnotationError(Exception):
-    """Base exception for SNP annotation errors."""
     pass
 
 class InvalidPositionError(SNPAnnotationError):
-    """Raised when the position is out of bounds."""
     pass
 
 class SNPAnnotator:
     """
-    Main class for handling SNP insertion and annotation against an MSA.
+    Handles SNP insertion and checks it against an MSA.
     """
     
     def __init__(self, msa_path: Union[str, Path], sequence_path: Union[str, Path]):
@@ -46,7 +44,7 @@ class SNPAnnotator:
         self._msa: Union[AlignIO.MultipleSeqAlignment, None] = None
 
     def load_data(self) -> None:
-        """Loads the FASTA and MSA files."""
+        """Grabs the FASTA and MSA files."""
         if not self.msa_path.exists():
             raise FileNotFoundError(f"MSA file not found: {self.msa_path}")
         if not self.sequence_path.exists():
@@ -57,22 +55,12 @@ class SNPAnnotator:
 
     def insert_snp(self, position: int, nucleotide: str) -> MutableSeq:
         """
-        Inserts a SNP at the given position (1-based).
-        
-        Args:
-            position: 1-based position in the sequence.
-            nucleotide: The nucleotide to insert (A, C, G, T).
-            
-        Returns:
-            MutableSeq: The modified sequence.
-            
-        Raises:
-            InvalidPositionError: If position is invalid.
+        Puts a SNP at the given position (1-based).
         """
         if self._gene_record is None:
             self.load_data()
             
-        if position < 1: # validate position
+        if position < 1:
              raise InvalidPositionError(f"Position must be greater than 0, got {position}")
              
         sequence_len = len(self._gene_record.seq)
@@ -83,24 +71,24 @@ class SNPAnnotator:
 
         gene_seq = MutableSeq(self._gene_record.seq)
         
-        index = position - 1 # 0
+        index = position - 1
         original_nuc = gene_seq[index]
         
-        # Insert SNP
+
         gene_seq[index] = nucleotide
         
         return gene_seq
 
     def translate_sequence(self, dna_sequence: MutableSeq) -> List[str]:
         """
-        Translates DNA sequence to amino acids using the standard codon table.
+        Translates DNA to amino acids.
         """
         seq_str = str(dna_sequence)
         
-        # Split into codons
+
         codon_list = [seq_str[i:i+3] for i in range(0, len(seq_str), 3)]
         
-        # Translate
+
         amino_sequence = [
             CODON_TABLE[codon] if codon in CODON_TABLE else "-" 
             for codon in codon_list
@@ -109,20 +97,12 @@ class SNPAnnotator:
 
     def determine_outcome(self, amino_sequence: List[str], position: int) -> float:
         """
-        Calculates conservation percentage at the amino acid position corresponding 
-        to the SNP.
-        
-        Args:
-            amino_sequence: Translated amino acid sequence.
-            position: Original 1-based nucleotide position.
-            
-        Returns:
-            float: Conservation percentage (0-100).
+        Figures out the conservation percentage.
         """
         if self._msa is None:
             self.load_data()
 
-        # Calculate amino acid index from nucl. position
+
         aa_index = (position - 1) // 3
         
         if aa_index >= len(amino_sequence):
@@ -134,7 +114,7 @@ class SNPAnnotator:
         total_sequences = len(self._msa)
         
         for alignment in self._msa:
-            # Check if alignment has enough length
+
             if aa_index < len(alignment.seq):
                 if alignment.seq[aa_index] == target_aa:
                     match_count += 1
@@ -143,15 +123,7 @@ class SNPAnnotator:
 
     def calculate_blosum_score(self, amino_sequence: List[str], position: int, nucleotide: str) -> Dict[str, Union[float, str]]:
         """
-        Calculates the biological impact score using BLOSUM62 matrix.
-        
-        Args:
-            amino_sequence: Translated amino acid sequence *with mutation*.
-            position: Original 1-based nucleotide position.
-            nucleotide: The mutated nucleotide (for context in return).
-            
-        Returns:
-            Dict containing scores and verdict.
+        Gets the biological impact score (BLOSUM62).
         """
         if self._msa is None:
             self.load_data()
@@ -195,7 +167,7 @@ class SNPAnnotator:
         avg_mutated = score_mutated_sum / count
         delta = avg_original - avg_mutated
         
-        verdict = "deleterious" if delta > 1.0 else "neutral"  # strict threshold
+        verdict = "deleterious" if delta > 1.0 else "neutral"
         
         return {
             "score_original": round(avg_original, 2),
@@ -206,18 +178,14 @@ class SNPAnnotator:
 
     def process_batch(self, csv_path: Union[str, Path]) -> List[Dict]:
         """
-        Processes a CSV file containing SNPs.
-        Expected columns: 'position', 'nucleotide'
-        
-        Returns:
-            List of results dictionaries.
+        Runs through a CSV file.
         """
         results = []
         with open(csv_path, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
-            reader.fieldnames = [name.strip().lower() for name in reader.fieldnames] # type: ignore
+            reader.fieldnames = [name.strip().lower() for name in reader.fieldnames]
             
-            if 'position' not in reader.fieldnames or 'nucleotide' not in reader.fieldnames: # type: ignore
+            if 'position' not in reader.fieldnames or 'nucleotide' not in reader.fieldnames:
                  raise ValueError("CSV must contain 'position' and 'nucleotide' columns.")
                  
             for row in reader:
@@ -249,7 +217,7 @@ class SNPAnnotator:
 
     @staticmethod
     def get_verdict(conservation_score: float) -> str:
-        """Returns 'deleterious' or 'neutral' based on score."""
+        """Returns 'deleterious' or 'neutral'."""
         if conservation_score < 90:
             return "deleterious"
         return "neutral"
